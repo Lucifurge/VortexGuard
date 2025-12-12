@@ -1,31 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cybersecurity Monitor Demo</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cybersecurity Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    /* Custom glowing text for cyber effect */
+    .glow-green { text-shadow: 0 0 5px #00ff99, 0 0 10px #00ff99, 0 0 20px #00ff99; }
+    .glow-blue { text-shadow: 0 0 5px #00ccff, 0 0 10px #00ccff, 0 0 20px #00ccff; }
+  </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-6">
-  <div class="w-full max-w-xl bg-gray-800 p-6 rounded-2xl shadow-xl">
-    <h1 class="text-2xl font-bold mb-4 text-center">System Status Monitor</h1>
+<body class="bg-gray-900 text-green-400 font-mono min-h-screen flex flex-col items-center p-6">
 
+  <!-- Header -->
+  <header class="mb-6 text-center">
+    <h1 class="text-3xl font-bold glow-blue">CYBERSECURITY DASHBOARD</h1>
+    <p class="text-sm text-gray-400 mt-1">Realtime System Monitoring & Threat Detection</p>
+  </header>
+
+  <!-- Main container -->
+  <div class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6">
+
+    <!-- Left panel: System status and logs -->
     <div class="space-y-4">
-      <div class="p-4 bg-gray-700 rounded-xl">
-        <p class="text-lg font-semibold">Server Status:</p>
-        <p id="server-status" class="text-green-400">Online</p>
+      <div class="p-6 bg-gray-800 rounded-2xl shadow-lg border border-blue-600">
+        <p class="text-lg font-semibold glow-green">Server Status:</p>
+        <p id="server-status" class="text-green-400 text-xl font-bold glow-green">Online</p>
       </div>
 
-      <div class="p-4 bg-gray-700 rounded-xl">
-        <p class="text-lg font-semibold">Recent Logs:</p>
-        <div id="log-box" class="h-40 overflow-y-auto bg-gray-900 p-3 rounded-xl text-sm"></div>
+      <div class="p-6 bg-gray-800 rounded-2xl shadow-lg border border-blue-600">
+        <p class="text-lg font-semibold glow-green">Recent Logs:</p>
+        <div id="log-box" class="h-64 overflow-y-auto bg-gray-900 p-4 rounded-xl text-sm glow-green border border-green-700"></div>
       </div>
 
-      <button id="simulate" class="w-full bg-blue-600 hover:bg-blue-500 p-3 rounded-xl font-semibold">Simulate Attack</button>
+      <button id="simulate" class="w-full bg-blue-600 hover:bg-blue-500 p-3 rounded-xl font-semibold glow-blue">Simulate Attack</button>
     </div>
+
+    <!-- Right panel: World map -->
+    <div class="p-6 bg-gray-800 rounded-2xl shadow-lg border border-blue-600">
+      <p class="text-lg font-semibold glow-green mb-2">Global Threat Map:</p>
+      <div id="world-map" class="h-96 w-full rounded-xl border border-green-700"></div>
+    </div>
+
   </div>
 
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
+    // Map setup
+    const map = L.map('world-map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Example markers
+    const servers = [
+      { name: 'San Francisco', coords: [37.7749, -122.4194] },
+      { name: 'London', coords: [51.5074, -0.1278] },
+      { name: 'Tokyo', coords: [35.6895, 139.6917] }
+    ];
+
+    servers.forEach(s => {
+      L.circleMarker(s.coords, { color: '#00ff99', radius: 8 }).addTo(map)
+        .bindPopup(`<b>${s.name} Server</b>`)
+        .openPopup();
+    });
+
+    // Logs & server status
     const logBox = document.getElementById('log-box');
     const serverStatus = document.getElementById('server-status');
 
