@@ -1,91 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cybersecurity Dashboard</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    /* Custom glowing text for cyber effect */
-    .glow-green { text-shadow: 0 0 5px #00ff99, 0 0 10px #00ff99, 0 0 20px #00ff99; }
-    .glow-blue { text-shadow: 0 0 5px #00ccff, 0 0 10px #00ccff, 0 0 20px #00ccff; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cybersecurity Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+  body { font-family: monospace; background-color: #0b0f1a; color: #00ff99; }
+  .glow-green { text-shadow: 0 0 5px #00ff99,0 0 10px #00ff99,0 0 20px #00ff99; }
+  .glow-blue { text-shadow: 0 0 5px #00ccff,0 0 10px #00ccff,0 0 20px #00ccff; }
+  .glow-red { text-shadow: 0 0 5px #ff4444,0 0 10px #ff4444,0 0 20px #ff4444; }
+  .sidebar { background-color: #0a0e1a; }
+  .map-container { height: calc(100vh - 4rem); }
+  .scrollbar::-webkit-scrollbar { width: 6px; }
+  .scrollbar::-webkit-scrollbar-thumb { background-color: #00ff99; border-radius: 3px; }
+</style>
 </head>
-<body class="bg-gray-900 text-green-400 font-mono min-h-screen flex flex-col items-center p-6">
+<body class="flex">
 
-  <!-- Header -->
-  <header class="mb-6 text-center">
-    <h1 class="text-3xl font-bold glow-blue">CYBERSECURITY DASHBOARD</h1>
-    <p class="text-sm text-gray-400 mt-1">Realtime System Monitoring & Threat Detection</p>
-  </header>
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar w-64 min-h-screen p-6 flex flex-col justify-between border-r border-blue-600">
+    <div>
+      <h2 class="text-2xl font-bold mb-6 glow-blue">CYBER OPS</h2>
+      <nav class="space-y-4">
+        <a href="#" class="block py-2 px-4 rounded hover:bg-blue-800 glow-green">Dashboard</a>
+        <a href="#" class="block py-2 px-4 rounded hover:bg-blue-800 glow-green">Servers</a>
+        <a href="#" class="block py-2 px-4 rounded hover:bg-blue-800 glow-green">Websites</a>
+        <a href="#" class="block py-2 px-4 rounded hover:bg-blue-800 glow-green">Tools</a>
+        <a href="#" class="block py-2 px-4 rounded hover:bg-blue-800 glow-green">Logs</a>
+        <a href="#" class="block py-2 px-4 rounded hover:bg-blue-800 glow-green">Settings</a>
+      </nav>
+    </div>
+    <footer class="text-sm text-gray-400 mt-6">© 2025 Cyber Ops</footer>
+  </aside>
 
-  <!-- Main container -->
-  <div class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6">
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col">
 
-    <!-- Left panel: System status and logs -->
-    <div class="space-y-4">
-      <div class="p-6 bg-gray-800 rounded-2xl shadow-lg border border-blue-600">
-        <p class="text-lg font-semibold glow-green">Server Status:</p>
-        <p id="server-status" class="text-green-400 text-xl font-bold glow-green">Online</p>
+    <!-- Top bar -->
+    <div class="flex justify-between items-center p-4 border-b border-blue-600 bg-gray-900">
+      <h1 class="text-2xl font-bold glow-blue">Global Threat Map</h1>
+      <div class="flex space-x-4">
+        <div class="px-4 py-2 bg-gray-800 rounded border border-green-700 glow-green">Servers Online: 12</div>
+        <div class="px-4 py-2 bg-gray-800 rounded border border-red-700 glow-red">Alerts: 5</div>
+        <button id="simulate" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded glow-blue">Simulate Attack</button>
       </div>
-
-      <div class="p-6 bg-gray-800 rounded-2xl shadow-lg border border-blue-600">
-        <p class="text-lg font-semibold glow-green">Recent Logs:</p>
-        <div id="log-box" class="h-64 overflow-y-auto bg-gray-900 p-4 rounded-xl text-sm glow-green border border-green-700"></div>
-      </div>
-
-      <button id="simulate" class="w-full bg-blue-600 hover:bg-blue-500 p-3 rounded-xl font-semibold glow-blue">Simulate Attack</button>
     </div>
 
-    <!-- Right panel: World map -->
-    <div class="p-6 bg-gray-800 rounded-2xl shadow-lg border border-blue-600">
-      <p class="text-lg font-semibold glow-green mb-2">Global Threat Map:</p>
-      <div id="world-map" class="h-96 w-full rounded-xl border border-green-700"></div>
+    <div class="flex flex-1 overflow-hidden">
+
+      <!-- Center Map -->
+      <div id="world-map" class="flex-1 map-container rounded-xl border border-green-700 m-4 shadow-lg"></div>
+
+      <!-- Right panel: logs -->
+      <aside class="w-80 bg-gray-800 p-4 m-4 rounded-xl border border-blue-600 overflow-y-auto scrollbar">
+        <h2 class="text-lg font-semibold glow-green mb-2">Live Logs</h2>
+        <div id="log-box" class="space-y-1 text-sm"></div>
+      </aside>
     </div>
 
-  </div>
+    <!-- Bottom Panel: Tools / Quick Stats -->
+    <section class="p-4 bg-gray-900 border-t border-blue-600">
+      <h2 class="text-lg font-semibold glow-green mb-2">Quick Stats / Tools Overview</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 bg-gray-800 rounded border border-green-700 glow-green text-center">Firewall</div>
+        <div class="p-4 bg-gray-800 rounded border border-green-700 glow-green text-center">Malware Scanner</div>
+        <div class="p-4 bg-gray-800 rounded border border-green-700 glow-green text-center">SSL/TLS</div>
+        <div class="p-4 bg-gray-800 rounded border border-green-700 glow-green text-center">Backup Tools</div>
+        <div class="p-4 bg-gray-800 rounded border border-green-700 glow-green text-center">Vulnerability Scanner</div>
+        <div class="p-4 bg-gray-800 rounded border border-green-700 glow-green text-center">Security Plugins</div>
+      </div>
+    </section>
 
-  <!-- Scripts -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    // Map setup
-    const map = L.map('world-map').setView([20, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+  </main>
 
-    // Example markers
-    const servers = [
-      { name: 'San Francisco', coords: [37.7749, -122.4194] },
-      { name: 'London', coords: [51.5074, -0.1278] },
-      { name: 'Tokyo', coords: [35.6895, 139.6917] }
-    ];
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  // Initialize dark world map
+  const map = L.map('world-map').setView([20, 0], 2);
+  L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_dark/{z}/{x}/{y}{r}.png', {
+    maxZoom: 20,
+    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+  }).addTo(map);
 
-    servers.forEach(s => {
-      L.circleMarker(s.coords, { color: '#00ff99', radius: 8 }).addTo(map)
-        .bindPopup(`<b>${s.name} Server</b>`)
-        .openPopup();
+  // Example nodes: servers & websites
+  const nodes = [
+    { name: 'San Francisco Server', coords: [37.7749, -122.4194], type: 'server' },
+    { name: 'London Website', coords: [51.5074, -0.1278], type: 'website' },
+    { name: 'Tokyo Server', coords: [35.6895, 139.6917], type: 'server' },
+    { name: 'Singapore Website', coords: [1.3521, 103.8198], type: 'website' },
+    { name: 'New York Server', coords: [40.7128, -74.0060], type: 'server' },
+    { name: 'Sydney Website', coords: [-33.8688, 151.2093], type: 'website' },
+  ];
+
+  const markers = [];
+
+  nodes.forEach(node => {
+    const color = node.type === 'server' ? '#00ff99' : '#00ccff';
+    const marker = L.circleMarker(node.coords, { color: color, radius: 8, fillOpacity: 0.8 }).addTo(map)
+      .bindPopup(`<b>${node.name}</b>`);
+    markers.push(marker);
+  });
+
+  // Logs & server simulation
+  const logBox = document.getElementById('log-box');
+
+  function addLog(text) {
+    const time = new Date().toLocaleTimeString();
+    const entry = document.createElement('p');
+    entry.textContent = `[${time}] ${text}`;
+    logBox.prepend(entry);
+  }
+
+  document.getElementById('simulate').addEventListener('click', () => {
+    addLog('⚠️ Attack detected on Tokyo Server!');
+    addLog('⚠️ DDoS attack detected on London Website!');
+    // Animate attack by changing color temporarily
+    markers.forEach(marker => {
+      if (marker.getPopup().getContent().includes('Tokyo') || marker.getPopup().getContent().includes('London')) {
+        marker.setStyle({ color: '#ff4444' });
+        setTimeout(() => marker.setStyle({ color: marker.options.color }), 2000);
+      }
     });
-
-    // Logs & server status
-    const logBox = document.getElementById('log-box');
-    const serverStatus = document.getElementById('server-status');
-
-    function addLog(text) {
-      const time = new Date().toLocaleTimeString();
-      const entry = document.createElement('p');
-      entry.textContent = `[${time}] ${text}`;
-      logBox.appendChild(entry);
-      logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    document.getElementById('simulate').addEventListener('click', () => {
-      serverStatus.textContent = "Under Attack";
-      serverStatus.classList.remove('text-green-400');
-      serverStatus.classList.add('text-red-400');
-      addLog("⚠️ Suspicious traffic detected!");
-    });
-  </script>
+  });
+</script>
 </body>
 </html>
