@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cybersecurity Monitor Demo</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" />
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-xl bg-gray-800 p-6 rounded-2xl shadow-xl">
+    <h1 class="text-2xl font-bold mb-4 text-center">System Status Monitor</h1>
+
+    <div class="space-y-4">
+      <div class="p-4 bg-gray-700 rounded-xl">
+        <p class="text-lg font-semibold">Server Status:</p>
+        <p id="server-status" class="text-green-400">Online</p>
+      </div>
+
+      <div class="p-4 bg-gray-700 rounded-xl">
+        <p class="text-lg font-semibold">Recent Logs:</p>
+        <div id="log-box" class="h-40 overflow-y-auto bg-gray-900 p-3 rounded-xl text-sm"></div>
+      </div>
+
+      <button id="simulate" class="w-full bg-blue-600 hover:bg-blue-500 p-3 rounded-xl font-semibold">Simulate Attack</button>
+    </div>
+  </div>
+
+  <script>
+    const logBox = document.getElementById('log-box');
+    const serverStatus = document.getElementById('server-status');
+
+    function addLog(text) {
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('p');
+      entry.textContent = `[${time}] ${text}`;
+      logBox.appendChild(entry);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    document.getElementById('simulate').addEventListener('click', () => {
+      serverStatus.textContent = "Under Attack";
+      serverStatus.classList.remove('text-green-400');
+      serverStatus.classList.add('text-red-400');
+      addLog("⚠️ Suspicious traffic detected!");
+    });
+  </script>
+</body>
+</html>
