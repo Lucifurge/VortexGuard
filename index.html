@@ -15,51 +15,62 @@ body{font-family:ui-monospace,Menlo,monospace;background:radial-gradient(circle 
 .neon{box-shadow:0 0 20px rgba(56,189,248,.25)}
 .glow-green{box-shadow:0 0 16px rgba(34,197,94,.6)}
 .glow-red{box-shadow:0 0 16px rgba(239,68,68,.6)}
-.map-container{height:calc(100vh - 6rem)}
+.map-container{height:calc(100vh - 10rem)}
 .scrollbar::-webkit-scrollbar{width:6px}
 .scrollbar::-webkit-scrollbar-thumb{background:#38bdf8;border-radius:6px}
+.pulse{animation:pulse 1.4s infinite}
+@keyframes pulse{0%{transform:scale(1);opacity:1}100%{transform:scale(2);opacity:0}}
 </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
+<!-- SIDEBAR -->
 <aside class="w-72 glass p-6 flex flex-col justify-between">
 <div>
 <h1 class="text-3xl font-bold text-cyan-400 mb-8">VortexGuard</h1>
 <nav class="space-y-3">
 <a class="block px-4 py-3 rounded hover:bg-slate-800">Dashboard</a>
 <a class="block px-4 py-3 rounded hover:bg-slate-800">Threat Map</a>
+<a class="block px-4 py-3 rounded hover:bg-slate-800">Scan Website</a>
 <a class="block px-4 py-3 rounded hover:bg-slate-800">Servers</a>
-<a class="block px-4 py-3 rounded hover:bg-slate-800">Web Apps</a>
-<a class="block px-4 py-3 rounded hover:bg-slate-800">Analytics</a>
 <a class="block px-4 py-3 rounded hover:bg-slate-800">Firewall</a>
-<a class="block px-4 py-3 rounded hover:bg-slate-800">Zero Trust</a>
 <a class="block px-4 py-3 rounded hover:bg-slate-800">Logs</a>
 </nav>
 </div>
 <footer class="text-xs text-slate-400">© 2025 VortexGuard</footer>
 </aside>
 
+<!-- MAIN -->
 <main class="flex-1 flex flex-col">
+
 <header class="glass px-6 py-4 flex justify-between items-center">
 <div>
 <h2 class="text-2xl font-semibold">Global Cyber Threat Intelligence</h2>
-<p class="text-slate-400 text-sm">Real‑time simulated defense operations</p>
+<p class="text-slate-400 text-sm">Real-time domain reputation & attack visualization</p>
 </div>
 <div class="flex gap-4">
 <div class="px-4 py-2 rounded glass glow-green">Servers Online <b>12</b></div>
-<div class="px-4 py-2 rounded glass glow-red">Active Attacks <b>3</b></div>
-<button id="simulate" class="px-5 py-2 rounded bg-cyan-500 text-black font-semibold neon">Simulate Attack</button>
+<div class="px-4 py-2 rounded glass glow-red">Active Threats <b id="alertCount">0</b></div>
 </div>
 </header>
 
+<!-- SCAN BAR -->
+<div class="glass px-6 py-4 flex gap-3 items-center">
+<input id="domainInput" class="flex-1 bg-slate-900 p-3 rounded border border-slate-700" placeholder="Scan a domain (example.com)" />
+<button onclick="scanDomain()" class="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold rounded neon">Scan</button>
+</div>
+
 <div class="flex flex-1 overflow-hidden">
+
+<!-- MAP -->
 <div class="flex-1 m-4 rounded-xl glass neon overflow-hidden">
 <div id="world-map" class="map-container"></div>
 </div>
 
+<!-- RIGHT PANEL -->
 <aside class="w-96 m-4 glass rounded-xl p-4 flex flex-col">
 <h3 class="text-lg text-cyan-400 mb-2">Live Security Feed</h3>
-<div id="log-box" class="flex-1 overflow-y-auto scrollbar text-sm"></div>
+<div id="log-box" class="flex-1 overflow-y-auto scrollbar text-sm space-y-1"></div>
 <canvas id="attackChart" class="mt-4"></canvas>
 </aside>
 </div>
@@ -76,44 +87,60 @@ body{font-family:ui-monospace,Menlo,monospace;background:radial-gradient(circle 
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-const map=L.map('world-map',{zoomControl:false,preferCanvas:true}).setView([20,0],2)
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19}).addTo(map)
+// MAP
+const map=L.map('world-map',{zoomControl:false}).setView([20,0],2)
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd'}).addTo(map)
 
-const nodes=[
+// SERVERS
+const servers=[
 {name:'San Francisco Core',coords:[37.77,-122.41]},
 {name:'London Cluster',coords:[51.50,-0.12]},
-{name:'Tokyo Node',coords:[35.68,139.69]},
-{name:'Singapore Edge',coords:[1.35,103.82]},
-{name:'New York Backbone',coords:[40.71,-74.00]}
+{name:'Tokyo Node',coords:[35.68,139.69]}
 ]
+servers.forEach(s=>L.circleMarker(s.coords,{radius:8,color:'#22c55e',fillOpacity:.9}).addTo(map))
 
-const attackers=[[50,30],[35,105],[-10,-55]]
-const markers=[]
-
-nodes.forEach(n=>{
-const m=L.circleMarker(n.coords,{radius:8,color:'#22c55e',fillColor:'#22c55e',fillOpacity:.9}).addTo(map)
-.bindPopup(`<b>${n.name}</b><br>Status Protected`)
-markers.push(m)
-})
-
+// LOGS
 const logBox=document.getElementById('log-box')
-function log(t){const p=document.createElement('p');p.textContent=`[${new Date().toLocaleTimeString()}] ${t}`;logBox.prepend(p)}
+function log(msg){const p=document.createElement('p');p.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;logBox.prepend(p)}
 
-function attack(from,to){
-const line=L.polyline([from,to],{color:'#ef4444',weight:2,dashArray:'5,10'}).addTo(map)
-const hit=L.circleMarker(to,{radius:6,color:'#ef4444',fillOpacity:.7}).addTo(map)
-setTimeout(()=>{map.removeLayer(line);map.removeLayer(hit)},2000)
+// MOCK THREAT ENGINE (URLVoid-style)
+function fakeScan(domain){
+const threats=['clean','suspicious','malicious']
+const status=threats[Math.floor(Math.random()*3)]
+const geo=[
+{lat:55.75,lon:37.61,c:'Russia'},
+{lat:39.90,lon:116.40,c:'China'},
+{lat:40.71,lon:-74.00,c:'USA'},
+{lat:35.68,lon:139.69,c:'Japan'}
+][Math.floor(Math.random()*4)]
+return{domain,status,risk:status==='clean'?5:status==='suspicious'?45:85,...geo}
 }
 
-document.getElementById('simulate').onclick=()=>{
-log('DDoS wave detected')
-log('SQL injection blocked')
-log('Botnet traffic neutralized')
-attackers.forEach((a,i)=>attack(a,nodes[i].coords))
-markers.forEach(m=>{m.setStyle({color:'#ef4444',fillColor:'#ef4444'});setTimeout(()=>m.setStyle({color:'#22c55e',fillColor:'#22c55e'}),2000)})
+// SCAN + MAP UPDATE
+function scanDomain(){
+const domain=document.getElementById('domainInput').value.trim()
+if(!domain)return
+const res=fakeScan(domain)
+const color=res.status==='malicious'?'#ef4444':res.status==='suspicious'?'#eab308':'#22c55e'
+
+const marker=L.circleMarker([res.lat,res.lon],{radius:10,color,fillOpacity:.9}).addTo(map)
+marker.bindPopup(`<b>${res.domain}</b><br>Status: ${res.status.toUpperCase()}<br>Risk: ${res.risk}%<br>Country: ${res.c}`)
+
+if(res.status==='malicious'){
+L.circle([res.lat,res.lon],{radius:500000,color:'#ef4444',className:'pulse'}).addTo(map)
+document.getElementById('alertCount').textContent++
 }
 
-new Chart(document.getElementById('attackChart'),{type:'doughnut',data:{labels:['DDoS','Malware','Bruteforce','SQLi'],datasets:[{data:[42,23,18,17],backgroundColor:['#ef4444','#f97316','#eab308','#38bdf8']}]} ,options:{plugins:{legend:{labels:{color:'#e5e7eb'}}}}})
+log(`Scan result: ${res.domain} → ${res.status.toUpperCase()}`)
+map.flyTo([res.lat,res.lon],4)
+}
+
+// CHART
+new Chart(document.getElementById('attackChart'),{
+type:'doughnut',
+data:{labels:['DDoS','Malware','Bruteforce','SQLi'],datasets:[{data:[42,23,18,17],backgroundColor:['#ef4444','#f97316','#eab308','#38bdf8']}]},
+options:{plugins:{legend:{labels:{color:'#e5e7eb'}}}}
+})
 </script>
 </body>
 </html>
