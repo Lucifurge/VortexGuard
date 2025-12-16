@@ -24,7 +24,6 @@ body{font-family:ui-monospace,Menlo,monospace;background:radial-gradient(circle 
 </head>
 <body class="flex h-screen overflow-hidden">
 
-<!-- SIDEBAR -->
 <aside class="w-72 glass p-6 flex flex-col justify-between">
 <div>
 <h1 class="text-3xl font-bold text-cyan-400 mb-8">VortexGuard</h1>
@@ -40,21 +39,19 @@ body{font-family:ui-monospace,Menlo,monospace;background:radial-gradient(circle 
 <footer class="text-xs text-slate-400">© 2025 VortexGuard</footer>
 </aside>
 
-<!-- MAIN -->
 <main class="flex-1 flex flex-col">
 
 <header class="glass px-6 py-4 flex justify-between items-center">
 <div>
 <h2 class="text-2xl font-semibold">Global Cyber Threat Intelligence</h2>
-<p class="text-slate-400 text-sm">Real-time domain reputation & attack visualization</p>
+<p class="text-slate-400 text-sm">Real-time website availability & geo intelligence</p>
 </div>
 <div class="flex gap-4">
-<div class="px-4 py-2 rounded glass glow-green">Servers Online <b>12</b></div>
-<div class="px-4 py-2 rounded glass glow-red">Active Threats <b id="alertCount">0</b></div>
+<div class="px-4 py-2 rounded glass glow-green">Tracked Sites <b id="trackedCount">0</b></div>
+<div class="px-4 py-2 rounded glass glow-red">Sites Down <b id="alertCount">0</b></div>
 </div>
 </header>
 
-<!-- SCAN BAR -->
 <div class="glass px-6 py-4 flex gap-3 items-center">
 <input id="domainInput" class="flex-1 bg-slate-900 p-3 rounded border border-slate-700" placeholder="Scan a domain (example.com)" />
 <button onclick="scanDomain()" class="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold rounded neon">Scan</button>
@@ -62,83 +59,55 @@ body{font-family:ui-monospace,Menlo,monospace;background:radial-gradient(circle 
 
 <div class="flex flex-1 overflow-hidden">
 
-<!-- MAP -->
 <div class="flex-1 m-4 rounded-xl glass neon overflow-hidden">
 <div id="world-map" class="map-container"></div>
 </div>
 
-<!-- RIGHT PANEL -->
 <aside class="w-96 m-4 glass rounded-xl p-4 flex flex-col">
-<h3 class="text-lg text-cyan-400 mb-2">Live Security Feed</h3>
+<h3 class="text-lg text-cyan-400 mb-2">Live Status Feed</h3>
 <div id="log-box" class="flex-1 overflow-y-auto scrollbar text-sm space-y-1"></div>
 <canvas id="attackChart" class="mt-4"></canvas>
 </aside>
 </div>
-
-<section class="glass px-6 py-4 grid grid-cols-2 md:grid-cols-6 gap-4">
-<div class="bg-slate-800 p-4 text-center">WAF<br><span class="text-green-400">Active</span></div>
-<div class="bg-slate-800 p-4 text-center">DDoS<br><span class="text-green-400">Mitigating</span></div>
-<div class="bg-slate-800 p-4 text-center">AI IDS<br><span class="text-green-400">Learning</span></div>
-<div class="bg-slate-800 p-4 text-center">Malware<br><span class="text-green-400">Clean</span></div>
-<div class="bg-slate-800 p-4 text-center">SSL<br><span class="text-green-400">Secure</span></div>
-<div class="bg-slate-800 p-4 text-center">Backups<br><span class="text-green-400">Synced</span></div>
-</section>
 </main>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// MAP
 const map=L.map('world-map',{zoomControl:false}).setView([20,0],2)
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd'}).addTo(map)
 
-// SERVERS
-const servers=[
-{name:'San Francisco Core',coords:[37.77,-122.41]},
-{name:'London Cluster',coords:[51.50,-0.12]},
-{name:'Tokyo Node',coords:[35.68,139.69]}
-]
-servers.forEach(s=>L.circleMarker(s.coords,{radius:8,color:'#22c55e',fillOpacity:.9}).addTo(map))
-
-// LOGS
 const logBox=document.getElementById('log-box')
 function log(msg){const p=document.createElement('p');p.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;logBox.prepend(p)}
 
-// MOCK THREAT ENGINE (URLVoid-style)
-function fakeScan(domain){
-const threats=['clean','suspicious','malicious']
-const status=threats[Math.floor(Math.random()*3)]
-const geo=[
-{lat:55.75,lon:37.61,c:'Russia'},
-{lat:39.90,lon:116.40,c:'China'},
-{lat:40.71,lon:-74.00,c:'USA'},
-{lat:35.68,lon:139.69,c:'Japan'}
-][Math.floor(Math.random()*4)]
-return{domain,status,risk:status==='clean'?5:status==='suspicious'?45:85,...geo}
-}
+let tracked=0,alerts=0
 
-// SCAN + MAP UPDATE
-function scanDomain(){
+async function scanDomain(){
 const domain=document.getElementById('domainInput').value.trim()
 if(!domain)return
-const res=fakeScan(domain)
-const color=res.status==='malicious'?'#ef4444':res.status==='suspicious'?'#eab308':'#22c55e'
+tracked++;document.getElementById('trackedCount').textContent=tracked
+log(`Scanning ${domain}...`)
 
-const marker=L.circleMarker([res.lat,res.lon],{radius:10,color,fillOpacity:.9}).addTo(map)
-marker.bindPopup(`<b>${res.domain}</b><br>Status: ${res.status.toUpperCase()}<br>Risk: ${res.risk}%<br>Country: ${res.c}`)
+let online=true
+try{await fetch(`https://api.allorigins.win/raw?url=https://${domain}`,{method:'HEAD'})}catch{online=false}
 
-if(res.status==='malicious'){
-L.circle([res.lat,res.lon],{radius:500000,color:'#ef4444',className:'pulse'}).addTo(map)
-document.getElementById('alertCount').textContent++
+const geo=await fetch(`http://ip-api.com/json/${domain}`).then(r=>r.json())
+if(geo.status!=='success'){log(`Geo lookup failed for ${domain}`);return}
+
+const color=online?'#22c55e':'#ef4444'
+const marker=L.circleMarker([geo.lat,geo.lon],{radius:10,color,fillOpacity:.9}).addTo(map)
+marker.bindPopup(`<b>${domain}</b><br>Status: ${online?'ONLINE':'DOWN'}<br>Country: ${geo.country}<br>ISP: ${geo.isp}`)
+
+if(!online){alerts++;document.getElementById('alertCount').textContent=alerts
+L.circle([geo.lat,geo.lon],{radius:600000,color:'#ef4444',className:'pulse'}).addTo(map)
+log(`⚠ ${domain} is DOWN`)}
+else{log(`✅ ${domain} is ONLINE`)}
+
+map.flyTo([geo.lat,geo.lon],4)
 }
 
-log(`Scan result: ${res.domain} → ${res.status.toUpperCase()}`)
-map.flyTo([res.lat,res.lon],4)
-}
-
-// CHART
 new Chart(document.getElementById('attackChart'),{
 type:'doughnut',
-data:{labels:['DDoS','Malware','Bruteforce','SQLi'],datasets:[{data:[42,23,18,17],backgroundColor:['#ef4444','#f97316','#eab308','#38bdf8']}]},
+data:{labels:['Online','Down'],datasets:[{data:[70,30],backgroundColor:['#22c55e','#ef4444']}]},
 options:{plugins:{legend:{labels:{color:'#e5e7eb'}}}}
 })
 </script>
