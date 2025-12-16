@@ -1,130 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VortexGuard • Advanced Threat Defense</title>
-
-<!-- Tailwind -->
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-
-<!-- Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-  body {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    background: radial-gradient(circle at top, #111827, #020617);
-    color: #e5e7eb;
-  }
-
-  .glass {
-    background: rgba(15, 23, 42, 0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(148, 163, 184, 0.15);
-  }
-
-  .neon {
-    box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
-  }
-
-  .glow-green { box-shadow: 0 0 16px rgba(34, 197, 94, 0.6); }
-  .glow-red { box-shadow: 0 0 16px rgba(239, 68, 68, 0.6); }
-
-  .map-container { height: calc(100vh - 6rem); }
-
-  .scrollbar::-webkit-scrollbar { width: 6px; }
-  .scrollbar::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 6px; }
-
-  .pulse {
-    animation: pulse 1.5s infinite;
-  }
-
-  @keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    70% { transform: scale(1.4); opacity: 0; }
-    100% { opacity: 0; }
-  }
-</style>
-</head>
-<body class="flex h-screen overflow-hidden">
-
-<!-- SIDEBAR -->
-<aside class="w-72 glass p-6 flex flex-col justify-between">
-  <div>
-    <h1 class="text-3xl font-bold text-cyan-400 mb-8 tracking-wider">VortexGuard</h1>
-    <nav class="space-y-3">
-      <a class="block px-4 py-3 rounded hover:bg-slate-800">Dashboard</a>
-      <a class="block px-4 py-3 rounded hover:bg-slate-800">Threat Map</a>
-      <a class="block px-4 py-3 rounded hover:bg-slate-800">Servers</a>
-      <a class="block px-4 py-3 rounded hover:bg-slate-800">Web Apps</a>
-      <a class="block px-4 py-3 rounded hover:bg-slate-800">Attack Analytics</a>
-      <a class="block px-4 py-3 rounded hover:bg-slate-800">Firewall</a>
-      <a class="block px-4 py-3 rounded hover:bg-slate-800">Zero‑Trust</a>
-      <a class="block px-4 py-3 rounded hover:bg-slate-800">Logs</a>
-      <a class="block px-4 py-3 rounded hover:bg-slate-800">Settings</a>
-    </nav>
-  </div>
-  <footer class="text-xs text-slate-400">© 2025 VortexGuard • Elite Defense Layer</footer>
-</aside>
-
-<!-- MAIN -->
-<main class="flex-1 flex flex-col">
-
-<!-- TOP BAR -->
-<header class="glass px-6 py-4 flex justify-between items-center">
-  <div>
-    <h2 class="text-2xl font-semibold">Global Cyber Threat Intelligence</h2>
-    <p class="text-slate-400 text-sm">Real‑time monitoring • AI‑assisted detection</p>
-  </div>
-  <div class="flex gap-4">
-    <div class="px-4 py-2 rounded glass glow-green">Servers Online: <b>12</b></div>
-    <div class="px-4 py-2 rounded glass glow-red">Active Attacks: <b id="alertCount">3</b></div>
-    <button id="simulate" class="px-5 py-2 rounded bg-cyan-500 hover:bg-cyan-400 text-black font-semibold neon">Simulate Global Attack</button>
-  </div>
-</header>
-
-<!-- CONTENT -->
-<div class="flex flex-1 overflow-hidden">
-
-  <!-- MAP -->
-  <div class="flex-1 m-4 rounded-xl glass neon overflow-hidden">
-    <div id="world-map" class="map-container"></div>
-  </div>
-
-  <!-- RIGHT PANEL -->
-  <aside class="w-96 m-4 glass rounded-xl p-4 flex flex-col">
-    <h3 class="text-lg font-semibold mb-2 text-cyan-400">Live Security Feed</h3>
-    <div id="log-box" class="flex-1 overflow-y-auto scrollbar text-sm space-y-1"></div>
-
-    <div class="mt-4">
-      <h4 class="text-sm mb-2 text-slate-300">Attack Distribution</h4>
-      <canvas id="attackChart"></canvas>
-    </div>
-  </aside>
-</div>
-
-<!-- BOTTOM STATS -->
-<section class="glass px-6 py-4 grid grid-cols-2 md:grid-cols-6 gap-4">
-  <div class="p-4 rounded bg-slate-800 text-center">WAF<br><span class="text-green-400">Active</span></div>
-  <div class="p-4 rounded bg-slate-800 text-center">DDoS Shield<br><span class="text-green-400">Mitigating</span></div>
-  <div class="p-4 rounded bg-slate-800 text-center">AI IDS<br><span class="text-green-400">Learning</span></div>
-  <div class="p-4 rounded bg-slate-800 text-center">Malware Scan<br><span class="text-green-400">Clean</span></div>
-  <div class="p-4 rounded bg-slate-800 text-center">SSL Integrity<br><span class="text-green-400">Secure</span></div>
-  <div class="p-4 rounded bg-slate-800 text-center">Backups<br><span class="text-green-400">Synced</span></div>
-</section>
-
-</main>
-
-<!-- SCRIPTS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  const map = L.map('world-map', { zoomControl: false }).setView([20, 0], 2);
-  L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_dark/{z}/{x}/{y}{r}.png').addTo(map);
+  const map = L.map('world-map', {
+    zoomControl: false,
+    preferCanvas: true
+  }).setView([20, 0], 2);
 
+  // ✅ FIXED DARK MAP (NO API KEY)
+  L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    {
+      subdomains: 'abcd',
+      maxZoom: 19
+    }
+  ).addTo(map);
+
+  // DEFENDED NODES
   const nodes = [
     { name: 'San Francisco Core', coords: [37.7749, -122.4194] },
     { name: 'London Web Cluster', coords: [51.5074, -0.1278] },
@@ -133,14 +23,24 @@
     { name: 'New York Backbone', coords: [40.7128, -74.0060] },
   ];
 
+  // ATTACK SOURCES (FAKE GEO-IP)
+  const attackers = [
+    { name: 'Eastern Europe Botnet', coords: [50, 30] },
+    { name: 'China Botnet', coords: [35, 105] },
+    { name: 'Brazil Botnet', coords: [-10, -55] }
+  ];
+
   const markers = [];
 
   nodes.forEach(n => {
     const marker = L.circleMarker(n.coords, {
       radius: 8,
       color: '#22c55e',
+      fillColor: '#22c55e',
       fillOpacity: 0.9
-    }).addTo(map).bindPopup(`<b>${n.name}</b><br>Status: Protected`);
+    }).addTo(map)
+      .bindPopup(`<b>${n.name}</b><br>Status: Protected`);
+
     markers.push(marker);
   });
 
@@ -152,17 +52,43 @@
     logBox.prepend(p);
   }
 
+  // 🔴 ATTACK ANIMATION
+  function simulateAttack(from, to) {
+    const line = L.polyline([from, to], {
+      color: '#ef4444',
+      weight: 2,
+      dashArray: '5,10'
+    }).addTo(map);
+
+    const impact = L.circleMarker(to, {
+      radius: 6,
+      color: '#ef4444',
+      fillOpacity: 0.7
+    }).addTo(map);
+
+    setTimeout(() => {
+      map.removeLayer(line);
+      map.removeLayer(impact);
+    }, 2000);
+  }
+
   document.getElementById('simulate').onclick = () => {
     log('⚠ Massive DDoS wave detected from Eastern Europe');
     log('⚠ SQL Injection blocked on London Web Cluster');
     log('⚠ Botnet traffic neutralized at Tokyo Defense Node');
 
+    attackers.forEach((attacker, i) => {
+      const target = nodes[i % nodes.length];
+      simulateAttack(attacker.coords, target.coords);
+    });
+
     markers.forEach(m => {
-      m.setStyle({ color: '#ef4444' });
-      setTimeout(() => m.setStyle({ color: '#22c55e' }), 2000);
+      m.setStyle({ color: '#ef4444', fillColor: '#ef4444' });
+      setTimeout(() => m.setStyle({ color: '#22c55e', fillColor: '#22c55e' }), 2000);
     });
   };
 
+  // CHART
   const ctx = document.getElementById('attackChart');
   new Chart(ctx, {
     type: 'doughnut',
@@ -178,5 +104,3 @@
     }
   });
 </script>
-</body>
-</html>
